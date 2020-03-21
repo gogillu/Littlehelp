@@ -1,28 +1,19 @@
-const { spawn } = require('child_process');
-const request = require('request');
-const test = require('tape');
+var assert = require('assert');
+var chai = require('chai')
+var chaiHttp = require('chai-http');
+var expect = chai.expect;
+var should = chai.should();
 
-// Start the app
-const env = Object.assign({}, process.env, {PORT: 5000});
-const child = spawn('node', ['index.js'], {env});
+chai.use(chaiHttp);
 
-test('responds to requests', (t) => {
-  t.plan(4);
+var index = require('./index');
 
-  // Wait until the server is ready
-  child.stdout.on('data', _ => {
-    // Make a request to our app
-    request('http://127.0.0.1:5000', (error, response, body) => {
-      // stop the server
-      child.kill();
-
-      // No error
-      t.false(error);
-      // Successful response
-      t.equal(response.statusCode, 200);
-      // Assert content checks
-      t.notEqual(body.indexOf("<title>Node.js Getting Started on Heroku</title>"), -1);
-      t.notEqual(body.indexOf("Getting Started with Node on Heroku"), -1);
-    });
-  });
+describe('Routing', function () {
+  
+  it('should redirect to https if request is http', function (done) {
+      chai.request('http://localhost:5000').get('/').then(function(res){
+        expect(res).to.redirect;
+        done();
+      }).catch(done);
+  }); 
 });

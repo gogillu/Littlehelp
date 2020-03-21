@@ -5,6 +5,13 @@ var fs = require('fs');
 var environment = require('dotenv');
 var APIS = require('./apis')(app)
 
+var http = require('http');
+var https = require('https');
+var privateKey  = fs.readFileSync('keys/privatekey.pem', 'utf8');
+var certificate = fs.readFileSync('keys/certificate.pem', 'utf8');
+
+var credentials = {key: privateKey, cert: certificate};
+
 app.set('trust proxy', 1) // trust first proxy
 
 
@@ -27,8 +34,10 @@ app.set('view engine', 'ejs');
 app.get('*', function(req, res, next) {  
   console.log(req.secure);
   if(!req.secure)
-    res.redirect('https://' + req.headers.host + req.url);
-  else
+  {
+    console.log(req.headers.host.slice(0, req.headers.host.length - 5));
+    res.redirect('https://' + req.headers.host.slice(0, req.headers.host.length - 5) +":8443" + req.url);
+  }else
     next();
 })
 
@@ -52,8 +61,10 @@ app.get('/driver', function(request, response) {
 });
 
 
-app.listen(app.get('port'), function() {
-  console.log('Node app is running on port', app.get('port'));
-});
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
 
+
+httpServer.listen(process.env.PORT || 5000);
+httpsServer.listen(8443);
 
